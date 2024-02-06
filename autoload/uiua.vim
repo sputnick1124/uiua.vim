@@ -1,39 +1,27 @@
-function uiua#Run(bang, args)
+function uiua#Run(args)
     let args = s:ShellTokenize(a:args)
-	if a:bang
-        let idx = index(l:args, '--')
-        if idx != 1
-            let uiua_args = idx == 0 ? [] : l:args[:idx-1]
-            let args = l:args[idx+1:]
-        else
-            let uiua_args = l:args
-            let args = []
-        endif
-    else
-        let uiua_args = []
-    endif
-
-    let b:uiua_last_uiua_args = l:uiua_args
-    let b:uiua_last_args = l:args
-
-    call s:Run(uiua_args, args)
-
+    let bufname = bufname('%')
+    call s:Run('run', bufname, args)
 endfunction
 
-function! s:Run(uiua_args, args)
-    let uiua_exe = exists("g:uiua_path") ? g:uiua_path : "uiua"
+function uiua#Test()
     let bufname = bufname('%')
+    call s:Run('test', bufname, [])
+endfunction
 
-    exe '!' . shellescape(uiua_exe) . " " . bufname . " " . join(map(a:args, 'shellescape(v:val)'))
+function! s:Run(uiua_arg, bufname, args)
+    let uiua_exe = exists("g:uiua_path") ? g:uiua_path : "uiua"
+
+    exe '!'.shellescape(uiua_exe)." ".a:uiua_arg." ".a:bufname." ".join(map(a:args, 'shellescape(v:val)'))
 endfunction
 
 function! uiua#Pad(count, line1, line2, ...) abort
     redraw
     let l:uiua_pad_url = get(g:, 'uiua_pad_url', 'https://uiua.org/pad')
-    let content = s:get_selection(a:count, a:line1, a:line2)
+    let content = s:get_selection(a:count, a:line1, a:line2, 0)
     let uiua_exe = exists("g:uiua_path") ? g:uiua_path : "uiua"
     let uiua_version = substitute(split(s:strip_output(system(uiua_exe . ' --version')), ' ')[1], '\.', '_', 'g')
-	let encoded = s:b64encode(content)
+	let encoded = s:b64encode2(content)
 	let encoded = substitute(encoded, '+', '-', 'g')
 	let encoded = substitute(encoded, '/', '_', 'g')
 	let url = l:uiua_pad_url."?src=".uiua_version.'__'.encoded
@@ -48,19 +36,24 @@ function! uiua#Pad(count, line1, line2, ...) abort
 endfunction
 
 function! uiua#Eval(count, line1, line2, ...) abort
-    let uiua_exe = exists("g:uiua_path" ? g:uiua_path : "uiua")
-    let content = s:get_selection(a:count, a:line1, a:line2)
-    exe '!' . shellescape(uiua_exe) . " eval '" . shellescape(content) . "'"
+    let content = s:get_selection(a:count, a:line1, a:line2, 1)
+    call s:Eval(content)
 endfunction
 
-function s:get_selection(count, line1, line2)
+function s:Eval(content)
+    let uiua_exe = exists("g:uiua_path") ? g:uiua_path : "uiua"
+    exe '!' . shellescape(uiua_exe) . " eval " . shellescape(a:content)
+endfunction
+
+function s:get_selection(count, line1, line2, for_eval)
     if a:count < 1
         let content = join(getline(a:line1, a:line2), "\n")
     else
         let save_regcont = @"
         let save_regtype = getregtype('"')
         silent! normal! gvy
-        let content = @"
+        let yanked = @"
+        let content = join(reverse(split(yanked, "\n")))
         call setreg('"', save_regcont, save_regtype)
     endif
     return content
@@ -72,6 +65,25 @@ function s:b64encode(input)
     else
         echoerr "Requires 'base64' executable"
     endif
+endfunction
+
+function s:b64encode2(input)
+    let lines = split(a:input, "\n")
+    let input = []
+
+    for line in lines
+        let line = substitute(line, '_', '\\_', 'g')
+        let line = substitute(line, '^', '$ ', '')
+        let input += [line]
+    endfor
+    let algo = '&p⊏⍜⇌⍜⋯(↯¯1_6≡(⬚0↙8))-@\0:⊂∩⊂∩+@A,@a⇡26+@0⇡10"-/"'
+    let input += [algo]
+    let tmpfile = tempname()
+    call writefile(input, tmpfile, "b")
+    let output = system(['uiua', 'run', tmpfile])
+    echom tmpfile
+    " call delete(tmpfile)
+    return output
 endfunction
 
 function s:strip_output(text)
