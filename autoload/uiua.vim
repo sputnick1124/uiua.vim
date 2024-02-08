@@ -11,6 +11,11 @@ function uiua#Test()
     call s:Run('test', bufname, [])
 endfunction
 
+function uiua#Fmt()
+    let bufname = bufname('%')
+    call s:Run('fmt', bufname, [])
+endfunction
+
 function! s:Run(uiua_arg, bufname, args)
     let uiua_exe = s:get_uiua_exe()
 

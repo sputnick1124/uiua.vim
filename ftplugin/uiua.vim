@@ -12,6 +12,8 @@ command! -nargs=* -complete=file -buffer UiuaRun call uiua#Run(<q-args>)
 
 command! -buffer UiuaTest call uiua#Test()
 
+command! -buffer UiuaFmt call uiua#Fmt()
+
 command! -range=% UiuaPad :call uiua#Pad(<count>, <line1>, <line2>)
 
 command! -range UiuaEval :call uiua#Eval(<count>, <line1>, <line2>)
