@@ -1,3 +1,5 @@
+" Parts of rust.vim by The Rust Foundation reused available
+" under the MIT license, available at https://github.com/rust-lang/rust.vim
 function uiua#Run(args)
     let args = s:ShellTokenize(a:args)
     let bufname = bufname('%')
@@ -10,7 +12,7 @@ function uiua#Test()
 endfunction
 
 function! s:Run(uiua_arg, bufname, args)
-    let uiua_exe = exists("g:uiua_path") ? g:uiua_path : "uiua"
+    let uiua_exe = s:get_uiua_exe()
 
     exe '!'.shellescape(uiua_exe)." ".a:uiua_arg." ".a:bufname." ".join(map(a:args, 'shellescape(v:val)'))
 endfunction
@@ -19,21 +21,21 @@ function! uiua#Pad(count, line1, line2, ...) abort
     redraw
     let l:uiua_pad_url = get(g:, 'uiua_pad_url', 'https://uiua.org/pad')
     let content = s:get_selection(a:count, a:line1, a:line2, 0)
-    let uiua_exe = exists("g:uiua_path") ? g:uiua_path : "uiua"
+    let uiua_exe = s:get_uiua_exe()
     let uiua_version = substitute(split(s:strip_output(system(uiua_exe . ' --version')), ' ')[1], '\.', '_', 'g')
-	let encoded = s:b64encode2(content)
-	let encoded = substitute(encoded, '+', '-', 'g')
-	let encoded = substitute(encoded, '/', '_', 'g')
+	let encoded = s:b64encode(content)
 	let url = l:uiua_pad_url."?src=".uiua_version.'__'.encoded
 	let footer = ''
 	if exists('g:uiua_clip_command')
-		call system(g:uiua_clip_command, url)
-		if !v:shell_error
-			let footer = ' (copied to clipboard)'
-		endif
-	endif
-    redraw | echomsg 'Done: '.url.footer
-endfunction
+            call system(g:uiua_clip_command, url)
+            if !v:shell_error
+                let footer = ' (copied to clipboard)'
+            else
+                echom "Error: ".v:shell_error
+            endif
+        endif
+        redraw | echomsg 'Done: '.url.footer
+    endfunction
 
 function! uiua#Eval(count, line1, line2, ...) abort
     let content = s:get_selection(a:count, a:line1, a:line2, 1)
@@ -41,7 +43,7 @@ function! uiua#Eval(count, line1, line2, ...) abort
 endfunction
 
 function s:Eval(content)
-    let uiua_exe = exists("g:uiua_path") ? g:uiua_path : "uiua"
+    let uiua_exe = s:get_uiua_exe()
     exe '!' . shellescape(uiua_exe) . " eval " . shellescape(a:content)
 endfunction
 
@@ -59,30 +61,14 @@ function s:get_selection(count, line1, line2, for_eval)
     return content
 endfunction
 
-function s:b64encode(input)
-    if executable('base64')
-        return s:strip_output(system('base64 --wrap=0', a:input))
-    else
-        echoerr "Requires 'base64' executable"
-    endif
+function s:get_uiua_exe()
+    return exists("g:uiua_path") ? g:uiua_path : "uiua"
 endfunction
 
-function s:b64encode2(input)
-    let lines = split(a:input, "\n")
-    let input = []
-
-    for line in lines
-        let line = substitute(line, '_', '\\_', 'g')
-        let line = substitute(line, '^', '$ ', '')
-        let input += [line]
-    endfor
-    let algo = '&p⊏⍜⇌⍜⋯(↯¯1_6≡(⬚0↙8))-@\0:⊂∩⊂∩+@A,@a⇡26+@0⇡10"-/"'
-    let input += [algo]
-    let tmpfile = tempname()
-    call writefile(input, tmpfile, "b")
-    let output = system(['uiua', 'run', tmpfile])
-    echom tmpfile
-    " call delete(tmpfile)
+function s:b64encode(input)
+    let uiua_exe = s:get_uiua_exe()
+    let prog = '&p⊏⍜⋯(≡⇌⬚0↯¯1_6≡(⇌⬚0↙8))&ru0 0⊂∩⊂∩+@A,@a⇡26+@0⇡10"-_"'
+    let output = system([uiua_exe, 'eval', prog], shellescape(a:input))
     return output
 endfunction
 
