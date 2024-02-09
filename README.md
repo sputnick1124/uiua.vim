@@ -1,3 +1,11 @@
+<p style="vertical-align:center; horizontal-align:left; font-size:150px">
+<img src="https://github.com/uiua-lang/uiua/blob/main/site/uiua-logo.png" width="128"/>
+&#10133;
+<img src="https://www.vim.org/images/vimlogo.svg" width="128"/>
+&#10140;
+<img src="logo/uiua-vim-logo.png"/>
+</p>
+
 # uiua.vim
 
 This is a simple Vim plugin that provides [Uiua](https://uiua.org) integration. Features include:
@@ -35,4 +43,4 @@ require("lazy").setup({
 - [ ] Optional automatic LSP setup (for neovim >= 0.8.0)
 - [ ] `:UiuaWatch`
 - [ ] Statusline addon
-- [ ] Logo
+- [x] Logo
