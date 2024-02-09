@@ -72,7 +72,7 @@ endfunction
 
 function s:b64encode(input)
     let uiua_exe = s:get_uiua_exe()
-    let prog = '&p⊏⍜⋯(≡⇌⬚0↯¯1_6≡(⇌⬚0↙8))&ru0 0⊂∩⊂∩+@A,@a⇡26+@0⇡10"-_"'
+    let prog = '&p⊏⍜⋯(⍜≡⇌(⬚0↯¯1_6)↘1)⊂255↘1↘¯2&ru0 0⊂∩⊂∩+@A,@a⇡26+@0⇡10"-_"'
     let output = system([uiua_exe, 'eval', prog], shellescape(a:input))
     return output
 endfunction
