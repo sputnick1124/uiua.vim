@@ -72,9 +72,12 @@ endfunction
 
 function s:b64encode(input)
     let uiua_exe = s:get_uiua_exe()
-    let prog = '&p⊏⍜⋯(⍜≡⇌(⬚0↯¯1_6)↘1)⊂255↘1↘¯2&ru0 0⊂∩⊂∩+@A,@a⇡26+@0⇡10"-_"'
-    let output = system([uiua_exe, 'eval', prog], shellescape(a:input))
-    return output
+    let prog = '&p⊏⍜⋯(⍜≡⇌(⬚0↯∞_6)↘1)⊂255↘1↘¯1&ru0 0⊂∩⊂∩+@A,@a⇡26+@0⇡10"-_"'
+    " make sure there is a newline at the end
+    let input = a:input
+    let output = trim(system([uiua_exe, 'eval', prog], shellescape(input)))
+    let padding = repeat('=', len(output) % 4)
+    return output . padding
 endfunction
 
 function s:strip_output(text)
